@@ -1,14 +1,16 @@
 use clap::Parser;
 use gen_color::{gradient, Cli, Commands};
+use miette::{Context, Result};
 use owo_colors::OwoColorize;
 use rand::Rng;
 
-fn main() {
+fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match &cli.command {
         Commands::Gradient(gradient_options) => {
             gradient::generate(gradient_options)
+                .wrap_err("when generating gradient")
         }
         Commands::Random => {
             let mut rng = rand::thread_rng();
@@ -26,6 +28,7 @@ fn main() {
                 color.1,
                 color.2
             );
+            Ok(())
         }
     }
 }

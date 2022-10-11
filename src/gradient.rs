@@ -1,9 +1,9 @@
-use std::{iter::zip, str::FromStr};
-
+use crate::ColorGenerationError;
 use clap::{arg, Args};
 use owo_colors::OwoColorize;
 use palette::{rgb::Rgb, Gradient, LinSrgb};
 use rand::Rng;
+use std::{iter::zip, str::FromStr};
 
 #[derive(Args)]
 pub struct GradientOptions {
@@ -24,10 +24,18 @@ pub fn generate(
         num_steps,
         stops,
     }: &GradientOptions,
-) {
+) -> Result<(), ColorGenerationError> {
     if colors.len() > 0 {
         if colors.len() != stops.len() {
-            panic!("number of colors and number of steps must match:\nnumber of colors: {}\nnumber of steps: {}", colors.len(), stops.len());
+            let color_str = format!("{:?}", colors);
+            let stops_str = format!("{:?}", stops);
+            return Err(
+                ColorGenerationError::ColorsAndStepsMustMatch {
+                    input: format!("{}\n{}\n{}", &color_str, num_steps, stops_str),
+                    advice: format!("match number of colors: `{}` with number of stops: `{}`", colors.len(), stops.len()),
+                    color_src: (0,color_str.len()),
+                    stops_src: (color_str.len()+4, stops_str.len()),
+                });
         }
         let color_list = zip(stops, colors)
             .map(|(&stop, color)| {
@@ -58,6 +66,7 @@ pub fn generate(
             let debug_str = "    ";
             print!("{}", debug_str.on_color(color));
         }
+        Ok(())
     } else {
         let mut rng = rand::thread_rng();
         let gradient = Gradient::new(vec![
@@ -100,5 +109,6 @@ pub fn generate(
             let debug_str = "    ";
             print!("{}", debug_str.on_color(*color));
         }
+        Ok(())
     }
 }
